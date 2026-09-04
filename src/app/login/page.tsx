@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
-  const [step, setStep] = useState<"enter" | "verify">("enter");
+  const [step, setStep] = useState<"enter" | "password" | "verify">("enter");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -26,6 +27,32 @@ export default function LoginPage() {
       return;
     }
     setStep("verify");
+  }
+
+  async function loginWithPassword() {
+    setLoading(true);
+    setError("");
+    const res = await fetch("/api/auth/password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, password }),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "Invalid password.");
+      return;
+    }
+    router.push("/");
+    router.refresh();
+  }
+
+  function continueWithIdentifier() {
+    if (identifier.trim().toLowerCase() === "ankit7779845484@gmail.com") {
+      setStep("password");
+      return;
+    }
+    requestOtp();
   }
 
   async function verifyOtp() {
@@ -62,8 +89,27 @@ export default function LoginPage() {
               />
             </div>
             {error && <p className="text-rust text-sm">{error}</p>}
-            <button className="btn-primary w-full" disabled={loading || !identifier} onClick={requestOtp}>
-              {loading ? "Sending…" : "Send code"}
+            <button className="btn-primary w-full" disabled={loading || !identifier} onClick={continueWithIdentifier}>
+              {loading ? "Continuing…" : "Continue"}
+            </button>
+          </>
+        ) : step === "password" ? (
+          <>
+            <p className="text-sm text-subtle">Enter the admin password to continue.</p>
+            <input
+              className="input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              autoComplete="current-password"
+            />
+            {error && <p className="text-rust text-sm">{error}</p>}
+            <button className="btn-primary w-full" disabled={loading || !password} onClick={loginWithPassword}>
+              {loading ? "Logging in…" : "Log in"}
+            </button>
+            <button className="text-sm text-subtle underline" onClick={() => setStep("enter")}>
+              Use a different phone or email
             </button>
           </>
         ) : (

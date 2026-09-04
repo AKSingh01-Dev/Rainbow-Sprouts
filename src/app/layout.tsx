@@ -39,6 +39,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </header>
           <main className="max-w-5xl mx-auto px-6 py-10">{children}</main>
+          <footer className="border-t border-line bg-panel">
+            <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col gap-2 text-sm text-subtle sm:flex-row sm:items-center sm:justify-between">
+              <span>Need help with your order?</span>
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                <a href="tel:+917779845484" className="hover:text-brass">Phone: 7779845484</a>
+                <a href="https://wa.me/917779845484" target="_blank" rel="noreferrer" className="hover:text-brass">WhatsApp</a>
+              </div>
+            </div>
+          </footer>
         </CartProvider>
       </body>
     </html>
