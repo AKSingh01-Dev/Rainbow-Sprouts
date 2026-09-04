@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+
+# Local OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Prisma local database files
+prisma/*.db
+prisma/*.db-journal
