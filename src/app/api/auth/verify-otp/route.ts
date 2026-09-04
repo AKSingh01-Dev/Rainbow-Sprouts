@@ -21,10 +21,12 @@ export async function POST(req: NextRequest) {
   }
 
   const isEmail = identifier.includes("@");
+  const adminEmail = (process.env.ADMIN_EMAIL || "ankit7779845484@gmail.com").trim().toLowerCase();
+  const isConfiguredAdmin = isEmail && identifier === adminEmail;
   const user = await prisma.user.upsert({
     where: isEmail ? { email: identifier } : { phone: identifier },
-    update: {},
-    create: isEmail ? { email: identifier } : { phone: identifier },
+    update: isConfiguredAdmin ? { isAdmin: true } : {},
+    create: isEmail ? { email: identifier, isAdmin: isConfiguredAdmin } : { phone: identifier },
   });
 
   const token = createSessionToken({ userId: user.id, isAdmin: user.isAdmin });
