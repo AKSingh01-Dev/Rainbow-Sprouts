@@ -1,4 +1,13 @@
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = getSession();
+  if (!session) redirect("/login?next=/admin");
+  if (!session.isAdmin) redirect("/");
+
   return (
     <div>
       <div className="flex gap-6 mb-8 border-b border-line pb-4 text-sm">

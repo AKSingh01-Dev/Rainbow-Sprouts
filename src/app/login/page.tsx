@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
+const ADMIN_EMAIL = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "ankit7779845484@gmail.com").toLowerCase();
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -10,13 +11,12 @@ export default function LoginPage() {
   const [step, setStep] = useState<"enter" | "password" | "verify">("enter");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
   async function requestOtp() {
     setLoading(true);
     setError("");
     const res = await fetch("/api/auth/request-otp", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identifier }),
     });
@@ -34,6 +34,7 @@ export default function LoginPage() {
     setError("");
     const res = await fetch("/api/auth/password", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identifier, password }),
     });
@@ -43,12 +44,11 @@ export default function LoginPage() {
       setError(data.error || "Invalid password.");
       return;
     }
-    router.push("/");
-    router.refresh();
+    window.location.assign("/admin");
   }
 
   function continueWithIdentifier() {
-    if (identifier.trim().toLowerCase() === "ankit7779845484@gmail.com") {
+    if (identifier.trim().toLowerCase() === ADMIN_EMAIL) {
       setStep("password");
       return;
     }
@@ -60,6 +60,7 @@ export default function LoginPage() {
     setError("");
     const res = await fetch("/api/auth/verify-otp", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identifier, code }),
     });
@@ -69,8 +70,7 @@ export default function LoginPage() {
       setError(data.error || "Invalid code.");
       return;
     }
-    router.push("/");
-    router.refresh();
+    window.location.assign("/");
   }
 
   return (

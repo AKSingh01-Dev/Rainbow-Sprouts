@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { createSessionToken, setSessionCookie } from "@/lib/session";
 import { z } from "zod";
 
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "ankit7779845484@gmail.com").toLowerCase();
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Amul8987singh";
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "ankit7779845484@gmail.com").trim().toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 const schema = z.object({
   identifier: z.string().trim().email(),
@@ -14,7 +14,7 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const parsed = schema.safeParse(body);
-  if (!parsed.success || parsed.data.identifier.toLowerCase() !== ADMIN_EMAIL || parsed.data.password !== ADMIN_PASSWORD) {
+  if (!ADMIN_PASSWORD || !parsed.success || parsed.data.identifier.toLowerCase() !== ADMIN_EMAIL || parsed.data.password !== ADMIN_PASSWORD) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
