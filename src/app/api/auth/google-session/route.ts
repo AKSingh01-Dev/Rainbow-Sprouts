@@ -8,11 +8,12 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email?.toLowerCase();
   if (!email) return NextResponse.json({ error: "Google sign-in session not found." }, { status: 401 });
+  const name = session.user?.name || null;
 
   const user = await prisma.user.upsert({
     where: { email },
-    update: { name: session.user?.name || undefined },
-    create: { email, name: session.user?.name || null, isAdmin: email === process.env.ADMIN_EMAIL?.toLowerCase() },
+    update: { name: name || undefined },
+    create: { email, name, isAdmin: email === process.env.ADMIN_EMAIL?.toLowerCase() },
   });
 
   setSessionCookie(createSessionToken({ userId: user.id, isAdmin: user.isAdmin }));
