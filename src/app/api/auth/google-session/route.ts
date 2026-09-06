@@ -6,9 +6,10 @@ import { createSessionToken, setSessionCookie } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  const email = session?.user?.email?.toLowerCase();
+  const googleUser = session?.user;
+  const email = googleUser?.email?.toLowerCase();
   if (!email) return NextResponse.json({ error: "Google sign-in session not found." }, { status: 401 });
-  const name = session.user?.name || null;
+  const name = googleUser.name || null;
 
   const user = await prisma.user.upsert({
     where: { email },
