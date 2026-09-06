@@ -32,9 +32,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     );
   }
 
-  const updated = await prisma.order.update({
-    where: { id: params.id },
-    data: { status: "cancelled" },
+  const updated = await prisma.$transaction(async (tx) => {
+    const cancelled = await tx.order.updateMany({
+      where: { id: params.id, userId: session.userId, status: { in: ["pending", "paid"] } },
+      data: { status: "cancelled" },
+    });
+    if (cancelled.count !== 1) throw new Error("ORDER_NOT_CANCELLABLE");
+
+    const items = await tx.orderItem.findMany({ where: { orderId: params.id } });
+    for (const item of items) {
+      await tx.product.update({
+        where: { id: item.productId },
+        data: { stock: { increment: item.quantity } },
+      });
+    }
+
+    return tx.order.findUnique({ where: { id: params.id } });
   });
 
   return NextResponse.json({ order: updated });

@@ -50,24 +50,41 @@ export async function POST(req: NextRequest) {
     return sum + product.price * item.quantity;
   }, 0);
 
-  const savedAddress = await prisma.address.create({ data: { ...address, userId: session.userId } });
+  try {
+    const order = await prisma.$transaction(async (tx) => {
+      const savedAddress = await tx.address.create({ data: { ...address, userId: session.userId } });
 
-    const order = await prisma.order.create({
-    data: {
-      userId: session.userId,
-      addressId: savedAddress.id,
-      totalAmount,
-      status: "pending",
-      paymentMethod: parsed.data.paymentMethod,
-      items: {
-        create: items.map((item) => {
-          const product = products.find((p) => p.id === item.productId)!;
-          return { productId: item.productId, quantity: item.quantity, priceAtPurchase: product.price };
-        }),
-      },
-    },
-    include: { items: true },
-  });
+      for (const item of items) {
+        const reserved = await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        });
+        if (reserved.count !== 1) throw new Error("INSUFFICIENT_STOCK");
+      }
 
-  return NextResponse.json({ order }, { status: 201 });
+      return tx.order.create({
+        data: {
+          userId: session.userId,
+          addressId: savedAddress.id,
+          totalAmount,
+          status: "pending",
+          paymentMethod: parsed.data.paymentMethod,
+          items: {
+            create: items.map((item) => {
+              const product = products.find((p) => p.id === item.productId)!;
+              return { productId: item.productId, quantity: item.quantity, priceAtPurchase: product.price };
+            }),
+          },
+        },
+        include: { items: true },
+      });
+    });
+
+    return NextResponse.json({ order }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Error && error.message === "INSUFFICIENT_STOCK") {
+      return NextResponse.json({ error: "One or more products are out of stock." }, { status: 409 });
+    }
+    throw error;
+  }
 }
