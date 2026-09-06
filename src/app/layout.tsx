@@ -13,11 +13,14 @@ export const metadata: Metadata = {
   description: "Shop our products",
 };
 
-export const dynamic = "force-dynamic";
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = getSession();
-  const user = session ? await prisma.user.findUnique({ where: { id: session.userId } }) : null;
+  const user = session
+    ? await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { email: true, phone: true, isAdmin: true },
+      })
+    : null;
 
   return (
     <html lang="en">

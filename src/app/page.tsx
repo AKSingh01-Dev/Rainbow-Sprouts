@@ -1,12 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/ProductCard";
 
-export const dynamic = "force-dynamic"; // always read fresh product data
-
 export default async function HomePage() {
   const products = await prisma.product.findMany({
     where: { active: true },
     orderBy: { createdAt: "desc" },
+    select: { id: true, name: true, description: true, price: true, imageUrl: true },
   });
 
   if (products.length === 0) {

@@ -1,12 +1,13 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-const SECRET = process.env.JWT_SECRET as string;
+const SECRET = process.env.JWT_SECRET;
 const COOKIE_NAME = "session";
 
 export type SessionPayload = { userId: string; isAdmin: boolean };
 
 export function createSessionToken(payload: SessionPayload) {
+  if (!SECRET) throw new Error("JWT_SECRET is not configured");
   return jwt.sign(payload, SECRET, { expiresIn: "30d" });
 }
 
@@ -25,6 +26,7 @@ export function clearSessionCookie() {
 }
 
 export function getSession(): SessionPayload | null {
+  if (!SECRET) return null;
   const token = cookies().get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {

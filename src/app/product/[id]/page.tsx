@@ -3,10 +3,11 @@ import { formatPrice } from "@/lib/format";
 import { notFound } from "next/navigation";
 import AddToCartButton from "./AddToCartButton";
 
-export const dynamic = "force-dynamic";
-
 export default async function ProductPage({ params }: { params: { id: string } }) {
-  const product = await prisma.product.findUnique({ where: { id: params.id } });
+  const product = await prisma.product.findUnique({
+    where: { id: params.id },
+    select: { id: true, name: true, description: true, price: true, imageUrl: true, stock: true, active: true },
+  });
   if (!product || !product.active) notFound();
 
   return (

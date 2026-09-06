@@ -12,7 +12,12 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
   const parsed = schema.safeParse(body);
   if (!ADMIN_PASSWORD || !parsed.success || parsed.data.identifier.toLowerCase() !== ADMIN_EMAIL || parsed.data.password !== ADMIN_PASSWORD) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
@@ -24,8 +29,11 @@ export async function POST(req: NextRequest) {
     create: { email: ADMIN_EMAIL, isAdmin: true, name: "Admin" },
   });
 
-  const token = createSessionToken({ userId: user.id, isAdmin: true });
-  setSessionCookie(token);
+  try {
+    setSessionCookie(createSessionToken({ userId: user.id, isAdmin: true }));
+  } catch {
+    return NextResponse.json({ error: "Login is temporarily unavailable." }, { status: 503 });
+  }
 
   return NextResponse.json({ ok: true, user: { id: user.id, isAdmin: true } });
 }

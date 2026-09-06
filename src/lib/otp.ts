@@ -76,6 +76,7 @@ async function sendSmsOtp(phone: string, code: string) {
   try {
     await fetch("https://control.msg91.com/api/v5/otp", {
       method: "POST",
+      signal: AbortSignal.timeout(8_000),
       headers: { "Content-Type": "application/json", authkey: process.env.MSG91_AUTH_KEY as string },
       body: JSON.stringify({
         template_id: process.env.MSG91_OTP_TEMPLATE_ID,

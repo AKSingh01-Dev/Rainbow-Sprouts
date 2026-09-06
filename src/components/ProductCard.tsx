@@ -15,7 +15,7 @@ export default function ProductCard({ id, name, description, price, imageUrl }: 
       <div className="aspect-square bg-paper border border-line rounded mb-3 overflow-hidden">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+          <img src={imageUrl} alt={name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-subtle text-sm">No image</div>
         )}

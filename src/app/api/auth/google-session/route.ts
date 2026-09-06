@@ -17,7 +17,11 @@ export async function GET(req: NextRequest) {
     create: { email, name, isAdmin: email === process.env.ADMIN_EMAIL?.toLowerCase() },
   });
 
-  setSessionCookie(createSessionToken({ userId: user.id, isAdmin: user.isAdmin }));
+  try {
+    setSessionCookie(createSessionToken({ userId: user.id, isAdmin: user.isAdmin }));
+  } catch {
+    return NextResponse.json({ error: "Login is temporarily unavailable." }, { status: 503 });
+  }
   const next = new URL(req.url).searchParams.get("next");
   const destination = next?.startsWith("/") ? next : "/";
   return NextResponse.redirect(new URL(destination, req.url));

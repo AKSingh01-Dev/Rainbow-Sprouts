@@ -7,7 +7,12 @@ import { z } from "zod";
 const schema = z.object({ identifier: z.string().trim().min(3), code: z.string().trim().length(6) });
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Missing identifier or code." }, { status: 400 });
@@ -29,8 +34,11 @@ export async function POST(req: NextRequest) {
     create: isEmail ? { email: identifier, isAdmin: isConfiguredAdmin } : { phone: identifier },
   });
 
-  const token = createSessionToken({ userId: user.id, isAdmin: user.isAdmin });
-  setSessionCookie(token);
+  try {
+    setSessionCookie(createSessionToken({ userId: user.id, isAdmin: user.isAdmin }));
+  } catch {
+    return NextResponse.json({ error: "Login is temporarily unavailable." }, { status: 503 });
+  }
 
   return NextResponse.json({ ok: true, user: { id: user.id, isAdmin: user.isAdmin } });
 }
