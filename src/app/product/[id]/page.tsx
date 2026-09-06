@@ -23,6 +23,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
         <h1 className="text-2xl mb-2">{product.name}</h1>
         <p className="text-lg font-medium mb-4">{formatPrice(product.price)}</p>
         <p className="text-subtle mb-6 whitespace-pre-wrap">{product.description}</p>
+        <p className="text-sm text-subtle mb-4">Estimated delivery: 10 - 15 days</p>
         <p className="text-sm text-subtle mb-4">{product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}</p>
         <AddToCartButton product={{ id: product.id, name: product.name, price: product.price, stock: product.stock }} disabled={product.stock === 0} />
       </div>

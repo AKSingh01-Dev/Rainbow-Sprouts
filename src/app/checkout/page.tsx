@@ -145,6 +145,7 @@ export default function CheckoutPage() {
             <span>{formatPrice(total)}</span>
           </div>
         </div>
+        <p className="text-sm text-subtle mb-3">Estimated delivery: 10 - 15 days</p>
         {error && <p className="text-rust text-sm mb-3">{error}</p>}
         <button className="btn-primary w-full" disabled={loading} onClick={placeOrder}>
           {loading ? "Processing…" : paymentMethod === "cod" ? "Place order (Cash on Delivery)" : `Pay ${formatPrice(total)}`}
