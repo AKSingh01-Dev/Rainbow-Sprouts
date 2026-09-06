@@ -64,7 +64,7 @@ export default function CheckoutPage() {
   async function placeOrder() {
     const addressErrors = validateAddress();
     if (Object.keys(addressErrors).length > 0) {
-      setError("Please correct the delivery address before continuing.");
+      setError("Please correctly fill the delivery address before continuing.");
       return;
     }
     setLoading(true);
