@@ -23,7 +23,10 @@ export default function LoginPage() {
     setLoading(false);
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error || "Could not send code.");
+      const message = typeof data.error === "string" ? data.error : "";
+      setError(message.toLowerCase().includes("testing email")
+        ? "Log in directly with google account from below"
+        : message || "Could not send code.");
       return;
     }
     setStep("verify");
