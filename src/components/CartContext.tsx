@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 export type CartItem = {
   productId: string;
@@ -21,9 +21,26 @@ type CartContextType = {
 };
 
 const CartContext = createContext<CartContextType | null>(null);
+const CART_STORAGE_KEY = "rainbow-sprouts-cart";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedItems = window.localStorage.getItem(CART_STORAGE_KEY);
+      if (storedItems) setItems(JSON.parse(storedItems));
+    } catch {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  }, [hydrated, items]);
 
   function addItem(item: Omit<CartItem, "quantity">, quantity = 1) {
     setItems((prev) => {
