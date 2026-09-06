@@ -12,10 +12,30 @@ declare global {
   }
 }
 
+type Address = {
+  name: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  phone: string;
+};
+
+type AddressField = keyof Address;
+
+function getAddressError(field: AddressField, value: string) {
+  if (field === "line2") return "";
+  if (field === "pincode") return /^\d{6}$/.test(value) ? "" : "Enter a 6-digit pincode.";
+  if (field === "phone") return /^\d{10}$/.test(value) ? "" : "Enter a 10-digit phone number.";
+  return value.trim() ? "" : "This field is required.";
+}
+
 export default function CheckoutPage() {
   const { items, total, clear } = useCart();
   const router = useRouter();
-  const [address, setAddress] = useState({ line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
+  const [address, setAddress] = useState<Address>({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
+  const [touched, setTouched] = useState<Partial<Record<AddressField, boolean>>>({});
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +44,29 @@ export default function CheckoutPage() {
     setAddress((prev) => ({ ...prev, [field]: value }));
   }
 
+  function handleFieldChange(field: AddressField, value: string) {
+    const nextValue = field === "pincode" || field === "phone" ? value.replace(/\D/g, "") : value;
+    updateField(field, nextValue);
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  }
+
+  function validateAddress() {
+    const fields = Object.keys(address) as AddressField[];
+    const errors = fields.reduce<Record<string, string>>((result, field) => {
+      const error = getAddressError(field, address[field]);
+      if (error) result[field] = error;
+      return result;
+    }, {});
+    setTouched(Object.fromEntries(fields.map((field) => [field, true])));
+    return errors;
+  }
+
   async function placeOrder() {
+    const addressErrors = validateAddress();
+    if (Object.keys(addressErrors).length > 0) {
+      setError("Please correct the delivery address before continuing.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -35,6 +77,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
           address,
+          name: address.name,
           paymentMethod,
         }),
       });
@@ -107,15 +150,30 @@ export default function CheckoutPage() {
       <div>
         <h1 className="text-2xl mb-6">Delivery address</h1>
         <div className="card space-y-3">
-          <input className="input" placeholder="Address line 1" value={address.line1} onChange={(e) => updateField("line1", e.target.value)} />
-          <input className="input" placeholder="Address line 2 (optional)" value={address.line2} onChange={(e) => updateField("line2", e.target.value)} />
+          <input className="input" placeholder="User name" autoComplete="name" value={address.name} onChange={(e) => handleFieldChange("name", e.target.value)} aria-invalid={Boolean(touched.name && getAddressError("name", address.name))} />
+          {touched.name && getAddressError("name", address.name) && <p className="text-rust text-xs">{getAddressError("name", address.name)}</p>}
+          <input className="input" placeholder="Address line 1" value={address.line1} onChange={(e) => handleFieldChange("line1", e.target.value)} aria-invalid={Boolean(touched.line1 && getAddressError("line1", address.line1))} />
+          {touched.line1 && getAddressError("line1", address.line1) && <p className="text-rust text-xs">{getAddressError("line1", address.line1)}</p>}
+          <input className="input" placeholder="Address line 2 (optional)" value={address.line2} onChange={(e) => handleFieldChange("line2", e.target.value)} />
           <div className="grid grid-cols-2 gap-3">
-            <input className="input" placeholder="City" value={address.city} onChange={(e) => updateField("city", e.target.value)} />
-            <input className="input" placeholder="State" value={address.state} onChange={(e) => updateField("state", e.target.value)} />
+            <div>
+              <input className="input" placeholder="City" value={address.city} onChange={(e) => handleFieldChange("city", e.target.value)} aria-invalid={Boolean(touched.city && getAddressError("city", address.city))} />
+              {touched.city && getAddressError("city", address.city) && <p className="text-rust text-xs mt-1">{getAddressError("city", address.city)}</p>}
+            </div>
+            <div>
+              <input className="input" placeholder="State" value={address.state} onChange={(e) => handleFieldChange("state", e.target.value)} aria-invalid={Boolean(touched.state && getAddressError("state", address.state))} />
+              {touched.state && getAddressError("state", address.state) && <p className="text-rust text-xs mt-1">{getAddressError("state", address.state)}</p>}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <input className="input" placeholder="Pincode" value={address.pincode} onChange={(e) => updateField("pincode", e.target.value)} />
-            <input className="input" placeholder="Contact phone" value={address.phone} onChange={(e) => updateField("phone", e.target.value)} />
+            <div>
+              <input className="input" placeholder="Pincode" inputMode="numeric" maxLength={6} value={address.pincode} onChange={(e) => handleFieldChange("pincode", e.target.value)} aria-invalid={Boolean(touched.pincode && getAddressError("pincode", address.pincode))} />
+              {touched.pincode && getAddressError("pincode", address.pincode) && <p className="text-rust text-xs mt-1">{getAddressError("pincode", address.pincode)}</p>}
+            </div>
+            <div>
+              <input className="input" placeholder="Contact phone" inputMode="numeric" maxLength={10} value={address.phone} onChange={(e) => handleFieldChange("phone", e.target.value)} aria-invalid={Boolean(touched.phone && getAddressError("phone", address.phone))} />
+              {touched.phone && getAddressError("phone", address.phone) && <p className="text-rust text-xs mt-1">{getAddressError("phone", address.phone)}</p>}
+            </div>
           </div>
         </div>
 

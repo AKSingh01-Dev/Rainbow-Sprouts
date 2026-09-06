@@ -6,14 +6,15 @@ import { z } from "zod";
 const itemSchema = z.object({ productId: z.string(), quantity: z.number().int().positive() });
 const createSchema = z.object({
   items: z.array(itemSchema).min(1),
+  name: z.string().trim().min(1, "Enter your name."),
   paymentMethod: z.enum(["online", "cod"]).default("online"),
   address: z.object({
-    line1: z.string().min(1),
+    line1: z.string().trim().min(1),
     line2: z.string().optional(),
-    city: z.string().min(1),
-    state: z.string().min(1),
-    pincode: z.string().min(4),
-    phone: z.string().min(6),
+    city: z.string().trim().min(1),
+    state: z.string().trim().min(1),
+    pincode: z.string().regex(/^\d{6}$/, "Enter a valid 6-digit pincode."),
+    phone: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit phone number."),
   }),
 });
 
@@ -38,7 +39,9 @@ export async function POST(req: NextRequest) {
 
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  const { items, address } = parsed.data;
+  const { items, address, name } = parsed.data;
+
+  await prisma.user.update({ where: { id: session.userId }, data: { name } });
 
   const products = await prisma.product.findMany({ where: { id: { in: items.map((i) => i.productId) } } });
   const totalAmount = items.reduce((sum, item) => {
