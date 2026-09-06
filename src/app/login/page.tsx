@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   async function requestOtp() {
     setLoading(true);
@@ -74,9 +75,10 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
               />
+              {email && !isEmailValid && <p className="text-rust text-xs mt-1">Enter a valid email address.</p>}
             </div>
             {error && <p className="text-rust text-sm">{error}</p>}
-            <button className="btn-primary w-full" disabled={loading || !email} onClick={requestOtp}>
+            <button className="btn-primary w-full" disabled={loading || !isEmailValid} onClick={requestOtp}>
               {loading ? "Sending…" : "Send code"}
             </button>
 
